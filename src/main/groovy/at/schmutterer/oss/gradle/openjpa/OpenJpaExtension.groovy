@@ -21,7 +21,7 @@ class OpenJpaExtension {
 
     Boolean addDefaultConstructor = true
     String connectionDriverName
-    Map<String,String> connectionProperties
+    Map<String, String> connectionProperties
     Boolean enforcePropertyRestrictions = false
     String[] excludes
     String[] includes
@@ -35,22 +35,22 @@ class OpenJpaExtension {
             result.put("connectionDriverName", connectionDriverName)
         }
         if (connectionProperties) {
-            String propertiesAsString = connectionProperties.collect  {key, value ->
+            String propertiesAsString = connectionProperties.collect { key, value ->
                 "$key=$value"
             }.join(",")
             result.put("connectionProperties", propertiesAsString)
         }
         result.put("enforcePropertyRestrictions", enforcePropertyRestrictions)
-        if (excludes){
+        if (excludes) {
             result.put("excludes", excludes.join(","))
         }
-        if (includes){
+        if (includes) {
             result.put("includes", includes.join(","))
         }
         if (persistenceXmlFile) {
             result.put("persistenceXmlFile", persistenceXmlFile.absolutePath)
         }
-        result.put("toolProperties", toolProperties)
+        result.putAll(toolProperties)
         return result;
     }
 

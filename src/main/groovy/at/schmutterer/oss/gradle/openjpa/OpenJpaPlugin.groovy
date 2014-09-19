@@ -29,12 +29,17 @@ class OpenJpaPlugin implements Plugin<Project> {
         target.extensions.create("openjpa", OpenJpaExtension)
         def task = target.tasks.create("openjpaEnhance").doLast {
             URL[] urls = collectURLs(target)
-            def loader = new URLClassLoader(urls, Thread.currentThread().getContextClassLoader())
-            Thread.currentThread().setContextClassLoader(loader)
-            PCEnhancer.run(
-                    target.fileTree(target.sourceSets.main.output.classesDir).files as String[],
-                    new Options(target.openjpa.toProperties())
-            )
+            def oldClassLoader = Thread.currentThread().getContextClassLoader()
+            def loader = new URLClassLoader(urls, oldClassLoader)
+            try {
+                Thread.currentThread().setContextClassLoader(loader)
+                PCEnhancer.run(
+                        target.fileTree(target.sourceSets.main.output.classesDir).files as String[],
+                        new Options(target.openjpa.toProperties())
+                )
+            } finally {
+                Thread.currentThread().setContextClassLoader(oldClassLoader)
+            }
         }
         target.tasks.add task
         target.tasks["classes"].dependsOn task
