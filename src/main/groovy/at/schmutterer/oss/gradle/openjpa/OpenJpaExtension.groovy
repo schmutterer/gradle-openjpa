@@ -18,13 +18,14 @@
 package at.schmutterer.oss.gradle.openjpa
 
 class OpenJpaExtension {
+
     Boolean addDefaultConstructor = true
     String connectionDriverName
-    String connectionProperties
+    Map<String,String> connectionProperties
     Boolean enforcePropertyRestrictions = false
-    String excludes
-    String includes
-    String persistenceXmlFile
+    String[] excludes
+    String[] includes
+    File persistenceXmlFile
     Map toolProperties = [:]
 
     Properties toProperties() {
@@ -34,19 +35,23 @@ class OpenJpaExtension {
             result.put("connectionDriverName", connectionDriverName)
         }
         if (connectionProperties) {
-            result.put("connectionProperties", connectionProperties)
+            String propertiesAsString = connectionProperties.collect  {key, value ->
+                "$key=$value"
+            }.join(",")
+            result.put("connectionProperties", propertiesAsString)
         }
         result.put("enforcePropertyRestrictions", enforcePropertyRestrictions)
         if (excludes){
-            result.put("excludes", excludes)
+            result.put("excludes", excludes.join(","))
         }
         if (includes){
-            result.put("includes", includes)
+            result.put("includes", includes.join(","))
         }
         if (persistenceXmlFile) {
-            result.put("persistenceXmlFile", persistenceXmlFile)
+            result.put("persistenceXmlFile", persistenceXmlFile.absolutePath)
         }
         result.put("toolProperties", toolProperties)
         return result;
     }
+
 }
