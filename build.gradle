@@ -33,38 +33,66 @@ dependencies {
     testCompile 'org.hamcrest:hamcrest-library:1.3'
 }
 
-test {
-    filter {
-        includeTestsMatching '*Test'
-    }
-    // listen to events in the test execution lifecycle
-    beforeTest { descriptor ->
-        logger.lifecycle("Running $descriptor")
-    }
-    // show standard out and standard error of the test JVM(s) on the console
-    //testLogging.showStandardStreams = Boolean.getBoolean("testlog")
-}
-
 apply plugin: 'maven'
+apply plugin: 'signing'
 
 repositories {
-    maven {
-        credentials {
-            username SPIT_ARTIFACTORY_USER
-            password SPIT_ARTIFACTORY_PASSWORD
+    mavenCentral()
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+import org.gradle.plugins.signing.Sign
+
+gradle.taskGraph.whenReady { taskGraph ->
+    if (taskGraph.allTasks.any { it instanceof Sign }) {
+        if ('signing.keyId' in project) {
+            throw new RuntimeException("Please configure gpg-key in gradle.properties");
         }
-        url "https://repository.schmutterer-partner.at/artifactory/libs-release"
+        if ('signing.password' in project) {
+            return
+        }
+        Console console = System.console()
+        def keyId = project."signing.keyId"
+        def password = console.readPassword("\nEnter Password for GPG-key $keyId}: ")
+        allprojects { ext."signing.password" = password }
+        console.printf "\nThanks.\n\n"
     }
 }
 
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: 'https://repository.schmutterer-partner.at/artifactory/libs-release-local') {
-                authentication(userName: SPIT_ARTIFACTORY_USER, password: SPIT_ARTIFACTORY_PASSWORD)
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
             }
-            snapshotRepository(url: 'https://repository.schmutterer-partner.at/artifactory/libs-snapshot-local') {
-                authentication(userName: SPIT_ARTIFACTORY_USER, password: SPIT_ARTIFACTORY_PASSWORD)
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.project {
+                url 'http://github.com/schmutterer/gradle-openjpa'
+
+                licenses {
+                    license {
+                        name 'The Apache License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
             }
         }
     }
@@ -72,13 +100,7 @@ uploadArchives {
 
 buildscript {
     repositories {
-        maven {
-            credentials {
-                username SPIT_ARTIFACTORY_USER
-                password SPIT_ARTIFACTORY_PASSWORD
-            }
-            url "https://repository.schmutterer-partner.at/artifactory/libs-release"
-        }
+        mavenCentral()
     }
     dependencies {
         classpath 'com.github.townsfolk:gradle-release:1.2'
@@ -88,4 +110,4 @@ buildscript {
 apply plugin: 'release'
 createReleaseTag.dependsOn uploadArchives
 
-defaultTasks = [clean, build]
+defaultTasks = ['clean', 'build']
