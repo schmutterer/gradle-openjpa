@@ -21,6 +21,7 @@ import org.apache.openjpa.enhance.PCEnhancer
 import org.apache.openjpa.lib.util.Options
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.file.FileCollection
 
 class OpenJpaPlugin implements Plugin<Project> {
 
@@ -33,8 +34,13 @@ class OpenJpaPlugin implements Plugin<Project> {
             def loader = new URLClassLoader(urls, oldClassLoader)
             try {
                 Thread.currentThread().setContextClassLoader(loader)
+                FileCollection tree = target.openjpa.files;
+                if (tree == null) {
+                    tree = target.fileTree(target.sourceSets.main.output.classesDir)
+                }
+                logger.info("enhancing {}", tree.files);
                 PCEnhancer.run(
-                        target.fileTree(target.sourceSets.main.output.classesDir).files as String[],
+                        tree.files as String[],
                         new Options(target.openjpa.toProperties())
                 )
             } finally {
