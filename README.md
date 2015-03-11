@@ -37,7 +37,7 @@ These configuration properties can be passed to the openjpa-closure:
     Example:
 
             openjpa {
-                connectionDriverName 'com.mchange.v2.c3p0.ComboPooledDataSource'
+                connectionDriverName = 'com.mchange.v2.c3p0.ComboPooledDataSource'
             }
 
      This is most times used in conjunction with _connectionProperties_.
@@ -48,7 +48,7 @@ These configuration properties can be passed to the openjpa-closure:
     Example:
 
         openjpa {
-            connectionProperties [
+            connectionProperties = [
                 driverClass:'com.mysql.jdbc.Driver',
                 jdbcUrl:'jdbc:mysql://localhost/mydatabase',
                 user:'root',
@@ -64,21 +64,18 @@ These configuration properties can be passed to the openjpa-closure:
 
     Whether to throw an exception when it appears that a property access entity is not obeying the restrictions placed on property access.
 
-* __excludes__ (String[])
+* __files__ (FileCollection)
 
-    List of excludes to scan searchDir to pass to the jobs.
-    This option may be used to stop OpenJPA tasks from scanning non-JPA classes (which usually leads to warnings such as "Type xxx has no metadata")
+    class files to enhance (defaults to sourceSets.main.output.classesDir)
+    This may be used to restrict the OpenJPA tasks to e.g. a single package which contains all the entities.
 
     Example:
 
         openjpa {
-            excludes ['**/notthese/*]
+            files = fileTree(sourceSets.main.output.classesDir).matching {
+                exclude '**/Unwanted.class'
+            }
         }
-
-* __includes__ (String[])
-
-    List of includes to scan searchDir to pass to the jobs.
-    This may be used to restrict the OpenJPA tasks to e.g. a single package which contains all the entities.
 
 * __persistenceXmlFile__ (File)
 
