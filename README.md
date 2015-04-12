@@ -76,7 +76,7 @@ These configuration properties can be passed to the openjpa-closure:
 
         openjpa {
             files = fileTree(sourceSets.main.output.classesDir).matching {
-                exclude '**/Unwanted.class'
+                exclude '**/Unwanted.class,**/AnotherUnwanted.class'
             }
         }
 
